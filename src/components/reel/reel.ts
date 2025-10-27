@@ -105,7 +105,7 @@ export class Reel extends Container {
     private _injectLanding( landing: Array<number> ): number{
         this._activeReelBand = [...this._config.reelBand];
 
-        const landingPos = (this._reelY + this._slotCount) % this._activeReelBand.length;
+        const landingPos = (this._reelY + this._slotCount) % this._activeReelBand.length; // todo: place the symbols randomly somewhere in the reel set
         let injectPos = landingPos + 1; // we land on the padding symbol
 
         for ( const symbolId of landing ){
