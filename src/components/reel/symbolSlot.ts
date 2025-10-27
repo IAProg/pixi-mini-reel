@@ -28,6 +28,8 @@ export class ReelSlot extends Container {
             this.removeChild(this._symbolSprite);
             this._symbolSprite = new ReelSymbol(textureName)
             this.addChild(this._symbolSprite);
+            
+            this._shownindex = slotIndex;
         }
     }
 }

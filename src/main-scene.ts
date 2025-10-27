@@ -29,7 +29,7 @@ export class MainScene extends Container {
 
     public async playBonus(bonusRound: Array<IBonusData>): Promise<void> {
 
-        this._reels.doSpin();
+        this._reels.doSpin( [2,2,2,2] );
 
         return;
 
