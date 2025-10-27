@@ -1,0 +1,9 @@
+{
+    "mainfest": [
+        { "alias": "background", "src": "textures/background.png" },
+        { "alias": "turtle", "src": "textures/turtle.jpg" },
+        { "alias": "cash", "src": "textures/cash.png" },
+        { "alias": "collector", "src": "textures/collector.png" },
+        { "alias": "blank", "src": "textures/blank.png" }
+    ]
+}
