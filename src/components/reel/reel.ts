@@ -18,70 +18,50 @@ export class Reel extends Container {
     private _reelVisualLength: number;
     private _reelSetLength: number;
 
-    private _headLabel: Text;
-    private _headPointer: Sprite;
-
     constructor(config: IReelConfig) {
         super();
         this._config = config;
-        const { rowCount, rowPadding, symbolWidth, symbolHeight, reelBand } = this._config;
+        const { rowCount, rowPadding, symbolHeight, reelBand } = this._config;
         const slotsRequired = rowCount + rowPadding;
-
-        this._headLabel = new Text("v", { fontSize: 80 });
-        this._headLabel.anchor.set(0.5);
-        this._headLabel.x = -650
-
-        this._headPointer = new Sprite(Texture.WHITE);
-        this._headPointer.anchor.set(0.5);
-        this._headPointer.x = -100;
 
         this._reelY = 0;
         this._reelSpeedCurrent = 0;
-        this._reelSpeedMax = 1;
+        this._reelSpeedMax = 10;
 
-        this._reelVisualLength = slotsRequired * symbolHeight;
-        this._reelSetLength = reelBand.length * symbolHeight;
+        this._reelVisualLength = slotsRequired;
+        this._reelSetLength = reelBand.length;
 
         this._slots = [];
         let symbolIndex = 0;
         const slotContainer = new Container();
-        for (let row = 0; row < slotsRequired; row++) {
-            const x = (symbolWidth * 0.5);
-            const y = (symbolHeight * row) + symbolHeight *0.5; 
-            const slot = new ReelSlot(symbolIndex, y);
-            slot.position.set(x, y);
+        for (let slotOffet = 0; slotOffet < slotsRequired; slotOffet++) {
+            const slot = new ReelSlot(symbolIndex, slotOffet);
             slot.setSymbol("blank");
             this._slots.push(slot);
             symbolIndex++;
         }
 
-
-
-        slotContainer.addChild(... this._slots, this._headPointer);
-        slotContainer.x -= symbolWidth / 2;
-        slotContainer.y -= this._reelVisualLength / 2;
-
-        //   slotContainer.scale.set(0.4)
-
+        slotContainer.addChild(... this._slots);
+        slotContainer.y -= this._reelVisualLength * symbolHeight / 2;
         this._backer = new Sprite(getTexture("reelsBacker"));
         this._backer.anchor.set(0.5);
 
 
         const mask = new Graphics()
             .beginFill(0xffffff)
-            .drawRect(0, 0, this._backer.width, this._backer.height)
+            .drawRect(-this._backer.width / 2, -this._backer.height / 2, this._backer.width, this._backer.height)
             .endFill();
-        mask.y = symbolHeight;
-        slotContainer.addChild(mask);
-        slotContainer.mask = mask;
+        this.mask = mask;
 
-        this.addChild(this._backer, slotContainer, this._headLabel);
+        this.addChild(this._backer, slotContainer, mask);
 
         this._reelState = "Idle"
 
         const ticker = new Ticker();
         ticker.add(this._update, this);
         ticker.start();
+
+        this._updateSlots()
     }
 
     async startSpin(): Promise<void> {
@@ -94,32 +74,20 @@ export class Reel extends Container {
 
     }
 
-    private _setSlotPositions(): void {
-        
+    private _updateSlots(): void {
         const { reelBand, symbolHeight, symbolMap } = this._config;
-        
-        
-        // this._reelY = (this._reelY) % this._reelSetLength;
-        // this._headPointer.y = this._reelY;
-        // const headPosIndex = Math.floor(this._reelY / symbolHeight);
-        // this._headLabel.text = `HEAD POS: ${Math.floor(this._reelY)}\nHEAD INDEX: ${headPosIndex}`;
 
         for (const slot of this._slots) {
-            const slotPosition = slot.reelPos + (this._reelY > slot.reelPos ? Math.ceil((this._reelY - slot.reelPos) / this._reelVisualLength) * this._reelVisualLength : 0);
+            const slotPosition = slot.offset + Math.ceil((this._reelY -  slot.offset) / this._reelVisualLength) * this._reelVisualLength;
 
-
-            const slotIndex = Math.floor((slotPosition % this._reelSetLength) / symbolHeight);
+            const slotIndex = Math.floor((slotPosition % this._reelSetLength));
             const symbolId = reelBand[slotIndex];
             const symbolSkin = symbolMap[symbolId];
 
-            const slotPositionToHead = ((slotPosition - this._reelY) *-1) % this._reelVisualLength + this._reelVisualLength ; // find the slots relative position to the head and wrap it into reel space
-            
+            const slotPositionToHead = ((slotPosition - this._reelY) * -1) % this._reelVisualLength + this._reelVisualLength; // find the slots relative position to the head and wrap it into reel space
 
-
-            slot.labelIndex(slotIndex);
-            slot.setSymbol(symbolSkin)
-
-            slot.y = slotPositionToHead;
+            slot.y = slotPositionToHead * symbolHeight;
+            slot.setSymbol(symbolSkin);
         }
     }
 
@@ -131,8 +99,6 @@ export class Reel extends Container {
 
 
 
-        this._setSlotPositions()
-
-        //  this._setSlotSymbols()
+        this._updateSlots()
     }
 }
