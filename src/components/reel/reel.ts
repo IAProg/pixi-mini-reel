@@ -1,9 +1,8 @@
-import { Container, Graphics, Sprite, Text, Texture, Ticker } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 import gsap from "gsap";
 import { IReelConfig } from "../../types";
 import { getTexture } from "../../asset-loader";
 import { ReelSlot } from "./symbolSlot";
-import { randomInt } from "../../utils";
 
 export class Reel extends Container {
     private _config: IReelConfig;
@@ -38,24 +37,23 @@ export class Reel extends Container {
         slotContainer.addChild(... this._slots);
         slotContainer.y -= (slotsRequired * symbolHeight * 0.5) + (symbolHeight * 0.5); // move slots back by half reel height (plus half a symbol because they are rooted at their centre)
 
-        //const mask = new Graphics()
-        //    .beginFill(0xffffff)
-        //    .drawRect(-this._backer.width / 2, -this._backer.height / 2, this._backer.width, this._backer.height)
-        //    .endFill();
-        //this.mask = mask;
+        const mask = new Graphics()
+            .beginFill(0xffffff)
+            .drawRect(-this._backer.width / 2, -this._backer.height / 2, this._backer.width, this._backer.height)
+            .endFill();
+        this.mask = mask;
 
-        this.addChild(this._backer, slotContainer);//, this.mask);
+        this.addChild(this._backer, slotContainer, this.mask);
         this._updateSlots()
     }
 
     async doSpin(): Promise<void> {
         this._reelY = 0;
         this._progress = 0;
-
         // move the reel to target index
         gsap.to(this, {
-            _progress: 1, duration: 3, ease: "none", onUpdate: () => {
-                this._reelY = this._lerp(0, 6, this._slotEase(this._progress, 0.2));
+            _progress: 1, duration: 2, ease: "none", onUpdate: () => {
+                this._reelY = this._lerp(0, 6 * 4, this._slotEase(this._progress, 0.2));
                 this._updateSlots();
             }
         })
@@ -81,8 +79,8 @@ export class Reel extends Container {
 
     // t goes from 0 → 1
     // combines quadratic tween start with linear mid-end to allow the spin to be done as a single move
+    // ease duration to be addusted depending on spin length ( ie to allow time for the anticipation without accelerating too slowly)
     private _slotEase(progress: number, easeDuration: number): number {
-
         if (progress < easeDuration) {
             return 0.5 * (progress / easeDuration) * (progress / easeDuration);
         } else {

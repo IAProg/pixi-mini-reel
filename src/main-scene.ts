@@ -33,19 +33,19 @@ export class MainScene extends Container {
 
         return;
 
-        this._tl.progress(1);
+   //   this._tl.progress(1);
 
-        return new Promise((resolve) => {
-            this._tl = gsap.timeline({ onComplete: resolve });
+   //   return new Promise((resolve) => {
+   //       this._tl = gsap.timeline({ onComplete: resolve });
 
-            let triggerTime = 0;
-            let roundIndex = 0;
+   //       let triggerTime = 0;
+   //       let roundIndex = 0;
 
-            for ( const roundData of bonusRound ){
-                triggerTime = this._cascadeReel.addCascade( this._tl, roundData.landing, triggerTime, roundData.showAnticipation );
-                roundIndex++;
-            }
-        });
+   //       for ( const roundData of bonusRound ){
+   //           triggerTime = this._cascadeReel.addCascade( this._tl, roundData.landing, triggerTime, roundData.showAnticipation );
+   //           roundIndex++;
+   //       }
+   //   });
     }
 
     /**
