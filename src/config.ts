@@ -1,5 +1,5 @@
-import { IApplicationOptions, ITextStyle } from "pixi.js";
-import { ICascadeConfig, IProgressBarConfig, IReelConfig, IRoundCounterConfig, ISizeRef } from "./types";
+import { IApplicationOptions } from "pixi.js";
+import { IReelConfig, ISizeRef } from "./types";
 
 
 /**
@@ -22,6 +22,10 @@ export const appConfig = {
             rowCount: 4,
             symbolWidth: 275,
             symbolHeight: 275,
+
+            durationPerSpin: 0.75,
+            accelerationDistance: 3,
+
             reelBand: [
                 1,
                 0,

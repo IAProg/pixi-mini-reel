@@ -11,7 +11,7 @@ export class Reel extends Container {
     private _bg: Sprite;
     private _slots: Array<ReelSlot>;
     private _slotCount: number;
-    
+
     private _reelY: number;
     private _progress: number;
     private _activeReelBand: Array<number>;
@@ -20,7 +20,7 @@ export class Reel extends Container {
         super();
         this._config = config;
         const { rowCount, rowPadding, symbolHeight } = this._config;
-        this._slotCount =  rowCount + rowPadding;
+        this._slotCount = rowCount + rowPadding;
 
         this._progress = 0;
         this._reelY = 0;
@@ -48,16 +48,28 @@ export class Reel extends Container {
         this._updateSlots()
     }
 
-    async doSpin( landing: Array<number> ): Promise<void> {
-        const landingIndex = this._injectLanding( landing );
-        const landingPos = landingIndex + (this._activeReelBand.length * randomInt(2,3));
-
+    async doSpin(landing: Array<number>): Promise<void> {
         this._reelY = 0;
         this._progress = 0;
+
+        const landingIndex = this._injectLanding(landing);
+        const landingPos = landingIndex + (this._activeReelBand.length * randomInt(2, 3));
+
+        const spinCount = (landingPos - this._reelY) / this._slotCount;
+
+        const spinDuration = 0.33 * spinCount;
+
+        console.log(spinCount)
+
+        // a portion of the first spin is spent accelerating 
+        // we need to calculate what protion of the TOTAL spin tween should be spent under acceleration, the more spins the lower this value should be
+
+        const accelerationPortion = 0.33;
+
         // move the reel to target index
         gsap.to(this, {
-            _progress: 1, duration: 2, ease: "none", onUpdate: () => {
-                this._reelY = this._lerp(0, landingPos, this._slotEase(this._progress, 0.2));
+            _progress: 1, duration: spinDuration, ease: "none", onUpdate: () => {
+                this._reelY = this._quadToLinearLerp(0, landingPos, this._progress, 0.5);
                 this._updateSlots();
             }
         })
@@ -77,42 +89,36 @@ export class Reel extends Container {
             const slotRelativeToHead = ((slotPosition - this._reelY) * -1) % this._slotCount + this._slotCount;
             const slotY = slotRelativeToHead * symbolHeight;
 
-            slot.update( slotY, symbolId )
+            slot.update(slotY, symbolId)
         }
     }
 
-    // t goes from 0 → 1
-    // combines quadratic tween start with linear mid-end to allow the spin to be done as a single move
-    // ease duration to be addusted depending on spin length ( ie to allow time for the anticipation without accelerating too slowly)
-    private _slotEase(progress: number, easeDuration: number): number {
-        if (progress < easeDuration) {
-            return 0.5 * (progress / easeDuration) * (progress / easeDuration);
-        } else {
-            // Linear section from that point up to 1
-            const startY = 0.5;                        // value at the end of ease-in
-            const slope = (1 - startY) / (1 - easeDuration); // ensures it reaches 1 at t=1
-            return startY + (progress - easeDuration) * slope;
-        }
-    }
-
-
-    private _lerp(a: number, b: number, t: number): number {
-        return a + (b - a) * t;
-    }
-
-
-
-    private _injectLanding( landing: Array<number> ): number{
+    private _injectLanding(landing: Array<number>): number {
         this._activeReelBand = [...this._config.reelBand];
 
         const landingPos = (this._reelY + this._slotCount) % this._activeReelBand.length; // todo: place the symbols randomly somewhere in the reel set
         let injectPos = landingPos + 1; // we land on the padding symbol
 
-        for ( const symbolId of landing ){
+        for (const symbolId of landing) {
             this._activeReelBand[injectPos] = symbolId;
             injectPos++;
         }
 
         return landingPos;
     }
+
+
+    private _quadToLinearLerp(a: number, b: number, t: number, tC: number): number {
+        const dist = b - a;
+        const accel = (2 * dist) / (tC * (2 - tC)); // constant acceleration
+
+        if (t < tC) { // accelerating phase
+            return a + 0.5 * accel * t * t;
+        } else { // constant-speed phase
+            const vC = accel * tC;
+            const xC = 0.5 * accel * tC * tC;
+            return a + xC + vC * (t - tC);
+        }
+    }
+
 }

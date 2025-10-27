@@ -45,13 +45,16 @@ export class App {
         );   
 
         // we need to update gsap manually 
-       // gsap.ticker.remove(gsap.updateRoot);
+        gsap.ticker.remove(gsap.updateRoot);
 
         // start
         const ticker = new Ticker();
+
+        //ticker.maxFPS = 2;
         ticker.add((dt) => {
+            //dt = 0.25;
             this._elapsed += dt / 100;
-        //    gsap.updateRoot(this._elapsed);
+            gsap.updateRoot(this._elapsed);
             this._renderer.render(this._stage);
         });
         ticker.start();
