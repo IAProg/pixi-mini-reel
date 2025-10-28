@@ -66,7 +66,7 @@ export class Reel extends Container {
         this._progress = 0;
 
         const spinsNormal = 2;
-        const spinsAnticipate = 6;
+        const spinsAnticipate = 8;
         const spinDuration = 0.6; 
         const accelerationDuration = 0.3;
 
