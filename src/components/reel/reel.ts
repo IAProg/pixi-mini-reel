@@ -3,7 +3,7 @@ import gsap from "gsap";
 import { IReelConfig } from "../../types";
 import { getTexture } from "../../asset-loader";
 import { ReelSlot } from "./symbolSlot";
-import { randomInt } from "../../utils";
+import { quadToLinearLerp } from "./lerp";
 
 export class Reel extends Container {
     private _config: IReelConfig;
@@ -14,7 +14,10 @@ export class Reel extends Container {
 
     private _reelY: number;
     private _progress: number;
+    private _inProgress: boolean;
+
     private _activeReelBand: Array<number>;
+    private _activeLanding: Array<number>;
 
     constructor(config: IReelConfig) {
         super();
@@ -22,6 +25,7 @@ export class Reel extends Container {
         const { rowCount, rowPadding, symbolHeight } = this._config;
         this._slotCount = rowCount + rowPadding;
 
+        this._inProgress = false;
         this._progress = 0;
         this._reelY = 0;
 
@@ -35,6 +39,7 @@ export class Reel extends Container {
         }
         slotContainer.addChild(... this._slots);
         slotContainer.y -= (this._slotCount * symbolHeight * 0.5) + (symbolHeight * 0.5); // move slots back by half reel height (plus half a symbol because they are rooted at their centre)
+        // slotContainer.scale.set(0.2)
 
         const mask = new Graphics()
             .beginFill(0xffffff)
@@ -45,34 +50,45 @@ export class Reel extends Container {
         this.addChild(this._bg, slotContainer, this.mask);
 
         this._activeReelBand = [...this._config.reelBand];
-        this._updateSlots()
+        this._activeLanding = [1, 1, 1, 1]; // default landing (leaves)
+
+        this._setCurrentLanding(this._activeLanding);
+        this._updateSlots();
     }
 
-    async doSpin(landing: Array<number>): Promise<void> {
-        this._reelY = 0;
+    async doSpin(landing: Array<number>, doAnticipation: boolean = true): Promise<void> {
+        if (this._inProgress) {
+            this._progress = 1;
+            this._inProgress = false;
+        }
+
+        this._reelY = this._reelY % this._activeReelBand.length;
         this._progress = 0;
 
+        const spinsNormal = 2;
+        const spinsAnticipate = 6;
+        const spinDuration = 0.6; 
+        const accelerationDuration = 0.3;
+
+        const additionalSpins = doAnticipation ? spinsAnticipate : spinsNormal;
+
         const landingIndex = this._injectLanding(landing);
-        const landingPos = landingIndex + (this._activeReelBand.length * randomInt(2, 3));
+        const startPos = this._reelY;
+        const reelLength = this._activeReelBand.length;
+        const landingPos = landingIndex + reelLength * additionalSpins;
+        const totalDistance = landingPos - startPos;
 
-        const spinCount = (landingPos - this._reelY) / this._slotCount;
-
-        const spinDuration = 0.33 * spinCount;
-
-        console.log(spinCount)
-
-        // a portion of the first spin is spent accelerating 
-        // we need to calculate what protion of the TOTAL spin tween should be spent under acceleration, the more spins the lower this value should be
-
-        const accelerationPortion = 0.33;
+        // duration in seconds
+        const duration = (totalDistance / reelLength) * spinDuration;
+        const accelerationSpan = accelerationDuration / duration;
 
         // move the reel to target index
         gsap.to(this, {
-            _progress: 1, duration: spinDuration, ease: "none", onUpdate: () => {
-                this._reelY = this._quadToLinearLerp(0, landingPos, this._progress, 0.5);
+            _progress: 1, duration, ease: "none", onUpdate: () => {
+                this._reelY = quadToLinearLerp(startPos, landingPos, this._progress, accelerationSpan)
                 this._updateSlots();
             }
-        })
+        });
     }
 
     private _updateSlots(): void {
@@ -87,6 +103,7 @@ export class Reel extends Container {
 
             // find the slots relative position to the head and wrap it into reel space
             const slotRelativeToHead = ((slotPosition - this._reelY) * -1) % this._slotCount + this._slotCount;
+            //const slotY = (slotPosition % this._activeReelBand.length) * symbolHeight;
             const slotY = slotRelativeToHead * symbolHeight;
 
             slot.update(slotY, symbolId)
@@ -94,31 +111,32 @@ export class Reel extends Container {
     }
 
     private _injectLanding(landing: Array<number>): number {
-        this._activeReelBand = [...this._config.reelBand];
+        this._activeReelBand = [...this._config.reelBand]; // refresh the reel band
+        this._setCurrentLanding(this._activeLanding); // restore the landing position
 
-        const landingPos = (this._reelY + this._slotCount) % this._activeReelBand.length; // todo: place the symbols randomly somewhere in the reel set
+        const landingPos = (this._reelY + this._slotCount); // todo: place the symbols randomly somewhere in the reel set ??
         let injectPos = landingPos + 1; // we land on the padding symbol
-
         for (const symbolId of landing) {
-            this._activeReelBand[injectPos] = symbolId;
+            let bandIndex = injectPos % this._activeReelBand.length
+            this._activeReelBand[bandIndex] = symbolId;
             injectPos++;
         }
 
+        this._activeLanding = landing;
         return landingPos;
     }
 
-
-    private _quadToLinearLerp(a: number, b: number, t: number, tC: number): number {
-        const dist = b - a;
-        const accel = (2 * dist) / (tC * (2 - tC)); // constant acceleration
-
-        if (t < tC) { // accelerating phase
-            return a + 0.5 * accel * t * t;
-        } else { // constant-speed phase
-            const vC = accel * tC;
-            const xC = 0.5 * accel * tC * tC;
-            return a + xC + vC * (t - tC);
+    private _setCurrentLanding(landing: Array<number>): void {
+        let injectPos = this._reelY + 1; // we land on the padding symbol;
+        for (const symbolId of landing) {
+            const reelIndex = Math.floor((injectPos % this._activeReelBand.length));
+            this._activeReelBand[reelIndex] = symbolId;
+            injectPos++;
         }
+        this._activeLanding = landing;
     }
+
+
+
 
 }

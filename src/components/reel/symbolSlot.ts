@@ -4,7 +4,7 @@ import { appConfig } from "../../config";
 
 export class ReelSlot extends Container {
     private _reelOffet: number;
-    private _shownindex: number;
+    private _shownindex: number | undefined;
 
     private _symbolSprite: ReelSymbol;
     private _symbolMap: { [key: number]: string; };
@@ -13,7 +13,7 @@ export class ReelSlot extends Container {
         super();
         this._symbolMap = appConfig.mainScene.reelConfig.symbolMap;
         this._reelOffet = reelOffet;
-        this._shownindex = reelOffet;
+        this._shownindex = undefined;
     }
 
     get offset(): number {
