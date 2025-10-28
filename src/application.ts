@@ -35,7 +35,7 @@ export class App {
         // create elements
         this._bg = new Background();
         this._mainScene = new MainScene();
-        this._controls = new Controls( this.play.bind(this) );
+        this._controls = new Controls( this.play.bind(this, false), this.play.bind(this, true));
         this._stage.addChild(this._bg, this._mainScene, this._controls);
 
         // scale content to fit window
@@ -64,8 +64,8 @@ export class App {
         this._elapsed += secondsToSkip;
     }
 
-    private play(): void{
-        this._mainScene.playBonus( getDummyBonus() );
+    private play( doAnticipation ): void{
+        this._mainScene.playBonus( doAnticipation );
     }
     
     /**

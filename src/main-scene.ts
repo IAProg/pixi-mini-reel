@@ -27,9 +27,9 @@ export class MainScene extends Container {
         this._tl = gsap.timeline();
     }
 
-    public async playBonus(bonusRound: Array<IBonusData>): Promise<void> {
+    public async playBonus( doAnticipation ): Promise<void> {
 
-        this._reels.doSpin( [2,2,2,2] );
+        this._reels.doSpin( [2,2,2,2], doAnticipation );
 
         return;
 

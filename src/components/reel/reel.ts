@@ -56,7 +56,7 @@ export class Reel extends Container {
         this._updateSlots();
     }
 
-    async doSpin(landing: Array<number>, doAnticipation: boolean = true): Promise<void> {
+    async doSpin(landing: Array<number>, doAnticipation: boolean): Promise<void> {
         if (this._inProgress) {
             this._progress = 1;
             this._inProgress = false;

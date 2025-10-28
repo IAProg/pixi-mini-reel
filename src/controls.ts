@@ -11,14 +11,18 @@ import { LabelButton } from "./components/labelButton";
 export class Controls extends Container {
     private size: ISizeRef;
     
-    constructor( play: Function ) {
+    constructor( spin: Function, anticipate: Function ) {
         super();
         const { size } = appConfig.mainScene;
         this.size = size;
 
-        const btnA = new LabelButton( "PLAY", () => play() );
+        const btnA = new LabelButton( "SPIN", () => spin() );
+        btnA.y -= 150;
 
-        this.addChild(btnA);
+        const btnB = new LabelButton( "SPIN\nANTICIPATE", () => anticipate() );
+        btnB.y += 150;
+
+        this.addChild(btnA, btnB);
 
     }
 
