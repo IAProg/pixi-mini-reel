@@ -1,4 +1,4 @@
-import { Container } from "pixi.js";
+import { Container, Text } from "pixi.js";
 import { ReelSymbol } from "./reelSymbol";
 import { appConfig } from "../../config";
 
@@ -33,5 +33,14 @@ export class ReelSlot extends Container {
         this.removeChild(this._symbolSprite);
         this._symbolSprite = new ReelSymbol(this._symbolMap[symbolId])
         this.addChild(this._symbolSprite);
+    }
+
+    setLabel( foo ){
+
+        const a = new Text(foo);
+        a.x = -200;
+        this.addChild(a)
+
+
     }
 }

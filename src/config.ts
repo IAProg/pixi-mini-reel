@@ -24,6 +24,7 @@ export const appConfig = {
             symbolHeight: 275,
             reelBand: [
                 1,
+                2,
                 0,
                 0,
                 0,
@@ -46,8 +47,7 @@ export const appConfig = {
                 0,
                 0,
                 0,
-                0,
-                0, // 24
+                2, // 24
                 1,
                 1,
                 1

@@ -17,7 +17,6 @@ export class Reel extends Container {
     private _inProgress: boolean;
 
     private _activeReelBand: Array<number>;
-    private _activeLanding: Array<number>;
 
     constructor(config: IReelConfig) {
         super();
@@ -34,12 +33,11 @@ export class Reel extends Container {
 
         this._slots = [];
         const slotContainer = new Container();
-        for (let slotOffet = 0; slotOffet < this._slotCount; slotOffet++) {
+        for (let slotOffet = 0; slotOffet > -this._slotCount; slotOffet--) {
             this._slots.push(new ReelSlot(slotOffet));
         }
         slotContainer.addChild(... this._slots);
         slotContainer.y += (this._slotCount * symbolHeight * 0.5) - (symbolHeight * 0.5); // move slots back by half reel height (plus half a symbol because they are rooted at their centre)
-        //slotContainer.scale.set(0.2)
 
         const mask = new Graphics()
             .beginFill(0xffffff)
@@ -50,11 +48,9 @@ export class Reel extends Container {
         this.addChild(this._bg, slotContainer, this.mask);
 
         this._activeReelBand = [...this._config.reelBand];
-        this._activeLanding = [0,2,2,2,2,0];
 
         this._updateSlots();// initilise symbols
         this._setCurrentView( [0,2,2,2,2,0] );
-        this._updateSlots();// draw default landing
     }
 
     async doSpin(landing: Array<number>, doAnticipation: boolean): Promise<void> {
@@ -73,11 +69,11 @@ export class Reel extends Container {
 
         const additionalSpins = doAnticipation ? spinsAnticipate : spinsNormal;
 
-        const landingIndex = 24//this._injectLanding(landing);
+        const landingIndex = 1//this._injectLanding(landing);
         const startPos = this._reelY;
         const reelLength = this._activeReelBand.length;
-        const landingPos = landingIndex + reelLength * additionalSpins;
-        const totalDistance = landingPos - startPos;
+        const landingPos = landingIndex - reelLength * additionalSpins;
+        const totalDistance = Math.abs(landingPos - startPos);
 
         // duration in seconds
         const duration = (totalDistance / reelLength) * spinDuration;
@@ -94,44 +90,34 @@ export class Reel extends Container {
 
     private _updateSlots(): void {
         const { symbolHeight } = this._config;
+
+        const bandLength = this._activeReelBand.length;
+
         for (const slot of this._slots) {
-            // move slots ahead of the reel head 
-            const slotPosition = slot.offset + Math.ceil((this._reelY - slot.offset) / this._slotCount) * this._slotCount;
+            // move slots behind of the reel head 
+            const slotPosition = slot.offset + Math.floor((this._reelY - slot.offset) / this._slotCount) * this._slotCount;
+            const wrappedIndex = ((slotPosition % bandLength) + bandLength) % bandLength; // convert negative index to positive
 
             // lookup symbol skin
-            const slotIndex = Math.floor((slotPosition % this._activeReelBand.length));
+            const slotIndex = Math.floor((wrappedIndex % this._activeReelBand.length));
             const symbolId = this._activeReelBand[slotIndex];
 
             // find the slots relative position to the head and wrap it into reel space
             const slotRelativeToHead = ((slotPosition - this._reelY)) % this._slotCount;
-            const mappedIndex = slotRelativeToHead * -1;
-            //const slotY = (slotPosition % this._activeReelBand.length) * symbolHeight;
-            const slotY = mappedIndex * symbolHeight;
+            const slotY = slotRelativeToHead * symbolHeight;
 
             slot.update(slotY, symbolId)
         }
     }
 
-    private _injectLanding(landing: Array<number>): number {
-        this._activeReelBand = [...this._config.reelBand]; // refresh the reel band
-
-        const landingPos = (this._reelY + this._slotCount); // todo: place the symbols randomly somewhere in the reel set ??
-        let injectPos = landingPos + 1; // we land on the padding symbol
-        for (const symbolId of landing) {
-            let bandIndex = injectPos % this._activeReelBand.length
-            this._activeReelBand[bandIndex] = symbolId;
-            injectPos++;
-        }
-
-        this._activeLanding = landing;
-        return landingPos;
-    }
-
     private _setCurrentView(landing: Array<number>): void {
         for (const slot of this._slots) {
-            const slotPosition = slot.offset + Math.ceil((this._reelY - slot.offset) / this._slotCount) * this._slotCount;
-            const slotRelativeToHead = ((slotPosition - this._reelY)) % this._slotCount;
-            slot.setSymbol( landing[slotRelativeToHead] );
+            const slotPosition = slot.offset + Math.floor((this._reelY - slot.offset) / this._slotCount) * this._slotCount;
+            const slotRelativeToHead = (((slotPosition - this._reelY)) % this._slotCount);
+            const convertedIndex = slotRelativeToHead + landing.length - 1;
+            slot.setSymbol( landing[convertedIndex] );
         }
+
+        this._updateSlots();// draw default landing
     }
 }
