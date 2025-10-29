@@ -13,7 +13,7 @@ export class ReelSlot extends Container {
         super();
         this._symbolMap = appConfig.mainScene.reelConfig.symbolMap;
         this._reelOffet = reelOffet;
-        this._shownindex = undefined;
+        this._shownindex = reelOffet;
     }
 
     get offset(): number {
@@ -24,12 +24,14 @@ export class ReelSlot extends Container {
         this.y = position;
 
         if (slotIndex !== this._shownindex) {
-            const textureName = this._symbolMap[slotIndex];
-            this.removeChild(this._symbolSprite);
-            this._symbolSprite = new ReelSymbol(textureName)
-            this.addChild(this._symbolSprite);
-            
+            this.setSymbol( slotIndex );
             this._shownindex = slotIndex;
         }
+    }
+
+    setSymbol( symbolId: number ): void {
+        this.removeChild(this._symbolSprite);
+        this._symbolSprite = new ReelSymbol(this._symbolMap[symbolId])
+        this.addChild(this._symbolSprite);
     }
 }

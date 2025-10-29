@@ -23,6 +23,7 @@ export const appConfig = {
             symbolWidth: 275,
             symbolHeight: 275,
             reelBand: [
+                1,
                 0,
                 0,
                 0,
@@ -46,11 +47,10 @@ export const appConfig = {
                 0,
                 0,
                 0,
-                0,
-                0,
-                0,
-                0,
-                0
+                0, // 24
+                1,
+                1,
+                1
             ],
             symbolMap: {
                 0: "blank",
