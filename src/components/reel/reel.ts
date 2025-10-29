@@ -96,17 +96,13 @@ export class Reel extends Container {
         for (const slot of this._slots) {
             // move slots behind of the reel head 
             const slotPosition = slot.offset + Math.floor((this._reelY - slot.offset) / this._slotCount) * this._slotCount;
-            const wrappedIndex = ((slotPosition % bandLength) + bandLength) % bandLength; // convert negative index to positive
-
-            // lookup symbol skin
-            const slotIndex = Math.floor((wrappedIndex % this._activeReelBand.length));
-            const symbolId = this._activeReelBand[slotIndex];
+            const slotIndex = ((slotPosition % bandLength) + bandLength) % bandLength; // convert negative index to positive
 
             // find the slots relative position to the head and wrap it into reel space
             const slotRelativeToHead = ((slotPosition - this._reelY)) % this._slotCount;
             const slotY = slotRelativeToHead * symbolHeight;
 
-            slot.update(slotY, symbolId)
+            slot.update(slotY, this._activeReelBand[slotIndex])
         }
     }
 
